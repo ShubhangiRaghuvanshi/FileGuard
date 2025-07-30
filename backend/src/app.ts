@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { connectDB } from './db';
 import uploadRouter from './routes/upload';
 import filesRouter from './routes/files';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -19,6 +21,12 @@ app.use(cors({
 app.use(express.json());
 app.use('/upload', uploadRouter);
 app.use('/files', filesRouter);
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 const PORT = process.env.PORT || 5000;
 
