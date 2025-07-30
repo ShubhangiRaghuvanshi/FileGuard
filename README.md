@@ -1,6 +1,6 @@
 # 🛡️ FileGuard - Secure File Upload & Malware Scanning
 
-A full-stack application that allows users to upload documents and simulates malware scanning asynchronously in the background. Built for the CyberXplore Developer Challenge.
+A full-stack application that allows users to upload documents and simulates malware scanning asynchronously in the background.
 
 ## 🚀 Features
 
