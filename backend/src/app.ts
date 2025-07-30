@@ -33,7 +33,7 @@ app.use(
 );
 
 // ✅ Handle preflight requests
-app.options("*", cors());
+app.options("/*", cors());
 
 // ✅ Global fallback headers (sometimes required on Render)
 app.use((req, res, next) => {
