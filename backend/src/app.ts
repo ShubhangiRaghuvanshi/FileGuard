@@ -11,11 +11,19 @@ dotenv.config();
 
 const app = express();
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://fileguard-2.onrender.com',
-    'https://file-guard-3.vercel.app',
-  ],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      "http://localhost:3000",
+      "https://fileguard-2.onrender.com",
+      "https://file-guard-3.vercel.app",
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json());
