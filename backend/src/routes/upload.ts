@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import FileMeta from '../models/FileMeta';
+import fs from "fs";
 
 const router = express.Router();
 const uploadsDir = path.join(process.cwd(), "backend/uploads");
