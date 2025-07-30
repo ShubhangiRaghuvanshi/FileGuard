@@ -1,5 +1,3 @@
-import path from "path";
-import fs from "fs";
 import express from "express";
 import multer from "multer";
 import { Readable } from "stream";
@@ -7,58 +5,43 @@ import cloudinary from "../config/cloudinary";
 import FileMeta from "../models/FileMeta";
 import { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
 
-
 const router = express.Router();
-const uploadsDir = path.join(process.cwd(), "backend/uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log("Uploads folder created:", uploadsDir);
-}
 
-// ✅ Store file in memory instead of local disk
+// ✅ Use memory storage for direct upload to Cloudinary
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (req, file, cb) => {
     const allowedExts = [".pdf", ".docx", ".jpg", ".jpeg", ".png"];
-    const ext = file.originalname
-      .toLowerCase()
-      .slice(file.originalname.lastIndexOf("."));
+    const ext = file.originalname.toLowerCase().slice(file.originalname.lastIndexOf("."));
     if (allowedExts.includes(ext)) cb(null, true);
     else cb(new Error("Only PDF, DOCX, JPG, and PNG files are allowed"));
   },
 });
 
-// ✅ Helper function for Cloudinary upload
+// ✅ Upload buffer directly to Cloudinary
 function uploadToCloudinary(fileBuffer: Buffer, filename: string): Promise<UploadApiResponse> {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: "uploads", resource_type: "auto" },
+      { folder: "uploads", resource_type: "auto" }, // ✅ No manual signature
       (error?: UploadApiErrorResponse, result?: UploadApiResponse) => {
-        if (error) reject(error);
-        else if (result) resolve(result);
-        else reject(new Error("Cloudinary upload failed"));
+        if (error) return reject(error);
+        if (!result) return reject(new Error("Upload failed"));
+        resolve(result);
       }
     );
-
-    // ✅ Pipe buffer to Cloudinary
     Readable.from(fileBuffer).pipe(uploadStream);
   });
 }
 
 router.post("/", upload.single("file"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
-    // ✅ Upload to Cloudinary
-    const cloudinaryResult = await uploadToCloudinary(
-      req.file.buffer,
-      req.file.originalname
-    );
+    // ✅ Upload file to Cloudinary
+    const cloudinaryResult = await uploadToCloudinary(req.file.buffer, req.file.originalname);
 
-    // ✅ Save metadata to MongoDB
+    // ✅ Save metadata in MongoDB
     const fileMeta = await FileMeta.create({
       filename: req.file.originalname,
       path: cloudinaryResult.secure_url,
@@ -68,7 +51,7 @@ router.post("/", upload.single("file"), async (req, res) => {
       result: null,
     });
 
-    // ✅ Add job to queue
+    // ✅ Add file to scan queue
     const { scanQueue } = await import("../queue");
     scanQueue.enqueue({
       fileId: fileMeta._id.toString(),
@@ -77,7 +60,7 @@ router.post("/", upload.single("file"), async (req, res) => {
     });
 
     res.status(201).json({
-      message: "File uploaded successfully",
+      message: "✅ File uploaded successfully",
       file: fileMeta,
     });
   } catch (err: any) {
