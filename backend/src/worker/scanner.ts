@@ -1,95 +1,75 @@
-import fs from 'fs';
-import FileMeta from '../models/FileMeta';
+import FileMeta from "../models/FileMeta";
 
-interface ScanJob {
-  fileId: string;
-  filePath: string;
-  filename: string;
-}
-
+import { ScanJob } from "../types";
 // Dangerous keywords and patterns to check for
 const DANGEROUS_PATTERNS = [
-  { pattern: 'rm -rf', severity: 'high' },
-  { pattern: 'eval(', severity: 'high' },
-  { pattern: 'exec(', severity: 'high' },
-  { pattern: 'bitcoin', severity: 'medium' },
-  { pattern: 'malware', severity: 'medium' },
-  { pattern: 'virus', severity: 'medium' },
-  { pattern: 'hack', severity: 'medium' },
-  { pattern: 'exploit', severity: 'high' },
-  { pattern: 'shell_exec', severity: 'high' },
-  { pattern: 'system(', severity: 'high' },
-  { pattern: 'passwd', severity: 'medium' },
-  { pattern: 'ssh-key', severity: 'medium' }
+  { pattern: "rm -rf", severity: "high" },
+  { pattern: "eval(", severity: "high" },
+  { pattern: "exec(", severity: "high" },
+  { pattern: "bitcoin", severity: "medium" },
+  { pattern: "malware", severity: "medium" },
+  { pattern: "virus", severity: "medium" },
+  { pattern: "hack", severity: "medium" },
+  { pattern: "exploit", severity: "high" },
+  { pattern: "shell_exec", severity: "high" },
+  { pattern: "system(", severity: "high" },
+  { pattern: "passwd", severity: "medium" },
+  { pattern: "ssh-key", severity: "medium" },
 ];
 
 export const scanFile = async (job: ScanJob) => {
   try {
-    console.log(`Starting scan for: ${job.filename}`);
-    
-  
-    // Simulate more realistic scanning process
-    console.log(`Analyzing file content for ${job.filename}...`);
-    
-    // Simulate different scan times based on file size and complexity
-    const baseDelay = 2000; // 2 seconds base
-    const complexityDelay = Math.random() * 3000; // 0-3 seconds for complexity
-    const totalDelay = baseDelay + complexityDelay;
-    
-    console.log(`Scanning ${job.filename} (estimated time: ${Math.round(totalDelay/1000)}s)...`);
-    await new Promise(resolve => setTimeout(resolve, totalDelay));
-    
-    let fileContent = '';
+    console.log(`🔍 Starting scan for: ${job.filename}`);
+
+    // Simulate scan delay
+    const delay = 2000 + Math.random() * 3000;
+    await new Promise((resolve) => setTimeout(resolve, delay));
+
+    // ✅ Fetch file from Cloudinary
+    let fileContent = "";
     try {
-      fileContent = fs.readFileSync(job.filePath, 'utf8').toLowerCase();
-    } catch (error) {
-      console.log(`Could not read file content for ${job.filename}, treating as clean`);
+      const response = await fetch(job.fileUrl);
+      const buffer = await response.arrayBuffer();
+      fileContent = Buffer.from(buffer).toString("utf8").toLowerCase();
+    } catch (err) {
+      console.log(`⚠️ Could not fetch file for ${job.filename}, treating as clean`);
     }
-    
-    // Check for dangerous patterns
-    const detectedThreats = DANGEROUS_PATTERNS.filter(pattern => 
-      fileContent.includes(pattern.pattern.toLowerCase())
+
+    // ✅ Check for dangerous patterns
+    const detectedThreats = DANGEROUS_PATTERNS.filter((p) =>
+      fileContent.includes(p.pattern.toLowerCase())
     );
-    
-    const isInfected = detectedThreats.length > 0;
-    const result = isInfected ? 'infected' : 'clean';
+
+    const result = detectedThreats.length > 0 ? "infected" : "clean";
     const scannedAt = new Date();
-    
-    
+
     await FileMeta.findByIdAndUpdate(job.fileId, {
-      status: 'scanned',
+      status: "scanned",
       result,
-      scannedAt
+      scannedAt,
     });
-    
-    console.log(`Scan completed for ${job.filename}: ${result}`);
-    
-    
-    if (isInfected) {
-      console.log(`⚠️  INFECTED FILE DETECTED: ${job.filename}`);
-      
-      // Send security alert
-      const { sendInfectedFileAlert } = await import('../services/notifications');
-      const threatPatterns = detectedThreats.map(t => t.pattern);
-      const severity = detectedThreats.some(t => t.severity === 'high') ? 'high' : 'medium';
-      
+
+    console.log(`✅ Scan completed for ${job.filename}: ${result}`);
+
+    // ✅ If infected, trigger alert
+    if (detectedThreats.length > 0) {
+      const { sendInfectedFileAlert } = await import("../services/notifications");
       await sendInfectedFileAlert({
         filename: job.filename,
         fileId: job.fileId,
-        detectedThreats: threatPatterns,
+        detectedThreats: detectedThreats.map((t) => t.pattern),
         timestamp: scannedAt.toISOString(),
-        severity
+        severity: detectedThreats.some((t) => t.severity === "high")
+          ? "high"
+          : "medium",
       });
     }
-    
   } catch (error) {
-    console.error(`Error scanning file ${job.filename}:`, error);
-    
-    
+    console.error(`❌ Error scanning ${job.filename}:`, error);
     await FileMeta.findByIdAndUpdate(job.fileId, {
-      status: 'scanned',
-      result: 'error',
-      scannedAt: new Date()
+      status: "scanned",
+      result: "error",
+      scannedAt: new Date(),
     });
   }
-}; 
+};

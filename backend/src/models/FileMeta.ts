@@ -1,21 +1,22 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface IFileMeta extends Document {
+  _id: Types.ObjectId; 
   filename: string;
   path: string;
-  status: 'pending' | 'scanned';
+  status: "pending" | "scanned";
   uploadedAt: Date;
   scannedAt: Date | null;
-  result: 'clean' | 'infected' | null;
+  result: "clean" | "infected" | null;
 }
 
 const FileMetaSchema = new Schema<IFileMeta>({
   filename: { type: String, required: true },
   path: { type: String, required: true },
-  status: { type: String, enum: ['pending', 'scanned'], default: 'pending' },
+  status: { type: String, enum: ["pending", "scanned"], default: "pending" },
   uploadedAt: { type: Date, default: Date.now },
   scannedAt: { type: Date, default: null },
-  result: { type: String, enum: ['clean', 'infected', null], default: null },
+  result: { type: String, enum: ["clean", "infected", null], default: null },
 });
 
-export default mongoose.model<IFileMeta>('FileMeta', FileMetaSchema); 
+export default mongoose.model<IFileMeta>("FileMeta", FileMetaSchema);

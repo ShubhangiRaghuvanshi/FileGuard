@@ -1,8 +1,4 @@
-interface ScanJob {
-  fileId: string;
-  filePath: string;
-  filename: string;
-}
+import { ScanJob } from "../types"; // ✅ Import a single shared type
 
 class InMemoryQueue {
   private queue: ScanJob[] = [];
@@ -10,28 +6,26 @@ class InMemoryQueue {
 
   enqueue(job: ScanJob) {
     this.queue.push(job);
-    console.log(`Job enqueued for file: ${job.filename}`);
+    console.log(`✅ Job enqueued for file: ${job.filename}`);
     this.processNext();
   }
 
   private async processNext() {
-    if (this.processing || this.queue.length === 0) {
-      return;
-    }
+    if (this.processing || this.queue.length === 0) return;
 
     this.processing = true;
     const job = this.queue.shift();
-    
+
     if (job) {
       try {
         await this.processJob(job);
       } catch (error) {
-        console.error('Error processing job:', error);
+        console.error("❌ Error processing job:", error);
       }
     }
 
     this.processing = false;
-    
+
     // Process next job if available
     if (this.queue.length > 0) {
       this.processNext();
@@ -39,12 +33,12 @@ class InMemoryQueue {
   }
 
   private async processJob(job: ScanJob) {
-    console.log(`Processing scan job for: ${job.filename}`);
-    
-    // Import scanner here to avoid circular dependencies
-    const { scanFile } = await import('../worker/scanner');
+    console.log(`🔍 Processing scan job for: ${job.filename}`);
+
+    // Import scanner dynamically to avoid circular dependencies
+    const { scanFile } = await import("../worker/scanner");
     await scanFile(job);
   }
 }
 
-export const scanQueue = new InMemoryQueue(); 
+export const scanQueue = new InMemoryQueue();
