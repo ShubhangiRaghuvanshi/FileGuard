@@ -14,6 +14,7 @@ app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
       "http://localhost:3000",
+      "https://file-guard.vercel.app",
       "https://fileguard-2.onrender.com",
       "https://file-guard-3.vercel.app",
     ];
