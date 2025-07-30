@@ -1,17 +1,12 @@
-<<<<<<< HEAD
-import express from 'express';
-import multer from 'multer';
-import path from 'path';
-import FileMeta from '../models/FileMeta';
+import path from "path";
 import fs from "fs";
-=======
 import express from "express";
 import multer from "multer";
 import { Readable } from "stream";
 import cloudinary from "../config/cloudinary";
 import FileMeta from "../models/FileMeta";
 import { UploadApiResponse, UploadApiErrorResponse } from "cloudinary";
->>>>>>> cf231bc (Refactored file upload to use Cloudinary, updated queue and scanner)
+
 
 const router = express.Router();
 const uploadsDir = path.join(process.cwd(), "backend/uploads");
@@ -91,8 +86,4 @@ router.post("/", upload.single("file"), async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-export default router; 
-=======
 export default router;
->>>>>>> cf231bc (Refactored file upload to use Cloudinary, updated queue and scanner)
