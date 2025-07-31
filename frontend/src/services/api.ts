@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { FileMeta, UploadResponse } from '../types';
 
-const API_BASE_URL = 'https://fileguard-2.onrender.com';
+const API_BASE_URL = 'https://fileguard.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
