@@ -31,12 +31,6 @@ app.use(cors({
   credentials: true,
 }));
 
-// Handle preflight OPTIONS requests explicitly
-app.options("*", cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
-
 // Manual fallback headers for Render
 app.use((req, res, next) => {
   if (allowedOrigins.includes(req.headers.origin || "")) {
