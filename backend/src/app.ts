@@ -10,51 +10,34 @@ import path from "path";
 dotenv.config();
 
 const app = express();
-<<<<<<< HEAD
+
 const allowedOrigins = [
   "http://localhost:3000",
   "https://fileguard-2.onrender.com",
   "https://file-guard-3.vercel.app",
+  "https://file-guard.vercel.app",
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
       return callback(new Error("CORS not allowed"));
     }
   },
-=======
-
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://file-guard.vercel.app",
-];
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("CORS not allowed"));
-      }
-    },
-    credentials: true,
-  })
-);
-
-// ✅ Handle preflight OPTIONS requests explicitly
-app.options("*", cors({
-  origin: allowedOrigins,
->>>>>>> cdc0e44f3e7ef51bb26896470b993bac2422c0f8
   credentials: true,
 }));
 
-// ✅ Manual fallback headers for Render
+// Handle preflight OPTIONS requests explicitly
+app.options("*", cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
+// Manual fallback headers for Render
 app.use((req, res, next) => {
   if (allowedOrigins.includes(req.headers.origin || "")) {
     res.header("Access-Control-Allow-Origin", req.headers.origin);
