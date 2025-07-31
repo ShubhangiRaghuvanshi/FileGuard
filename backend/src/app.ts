@@ -10,18 +10,20 @@ import path from 'path';
 dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      "http://localhost:3000",
-      "https://fileguard-2.onrender.com",
-      "https://file-guard-3.vercel.app",
-    ];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://fileguard-2.onrender.com",
+  "https://file-guard-3.vercel.app",
+];
 
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
     } else {
-      callback(new Error("CORS not allowed"));
+      return callback(new Error("CORS not allowed"));
     }
   },
   credentials: true,
